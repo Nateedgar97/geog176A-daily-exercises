@@ -1,6 +1,6 @@
 ---
 title: "Daily Exercise 05"
-author: "Mike Johnson"
+author: "Nate Edgar"
 output: html_document
 ---
 
@@ -52,7 +52,8 @@ Use `dplyr` verbs to tell create a data.frame of the **5** counties with the mos
 (**Hint:** `filter`, `arrange`)
 
 ```{r}
-
+q1=covid %>% filter(date==max(date)) %>% arrange(-cases) %>% top_n(5)
+q1
 ```
 
 ## Question 2: 
@@ -62,7 +63,8 @@ Use `dplyr` verbs to tell create a data.frame of the **5** states with the _most
 (**Hint:** `filter`, `group_by`, `summarize`, `arrange`)
 
 ```{r}
-
+q2=covid %>% filter(date==max(date)) %>% group_by(state) %>% summarize(totalCases = sum(cases, na.rm = TRUE)) %>% arrange(totalCases) %>% arrange(-totalCases) %>% top_n(5)
+q2
 ```
 
 ## Question 3: 
@@ -72,7 +74,11 @@ Use the `dplyr` verbs to report the  **5** counties with the _worst_ current dea
 (**Hint:** `filter`, `mutate`, `arrange`, `slice`)
 
 ```{r}
-
+q3=covid %>%
+filter(date==max(date)) %>% mutate(ratio=100*(deaths/cases)) %>%
+arrange(-cases)%>%
+slice_max(ratio, n=5)
+q3
 ```
 
 
@@ -83,7 +89,14 @@ USe the `dplyr` verbs to report the **5** states with the worst current deaths/c
 (**Hint:** `filter`, `group_by`, `summarize`, `mutate`, `arrange`)
 
 ```{r}
-
+q4=covid %>%
+filter(date==max(date)) %>% 
+group_by(state) %>%
+summarize(totCases=sum(cases),
+          totDeaths=sum(deaths))%>%
+ungroup() %>%
+mutate(ratio=100*(totDeaths/totCases)) %>% slice_max(ratio,n=5)
+q4
 ```
 
 
