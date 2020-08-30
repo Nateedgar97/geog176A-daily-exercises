@@ -1,0 +1,102 @@
+# Name: Nate Edgar
+# Date: 8/25/20
+# Purpose: Exercise 13
+
+
+
+# Install & Put in packages:
+```{r}
+library(tidyverse)
+library(rmapshaper)
+library(sf)
+```
+
+
+# Get CONUS state borders from USAboundaries::us_states
+```{r}
+CONUS_state_borders = 
+  USAboundaries::us_states()%>% 
+  filter(!state_name %in% c("Hawaii", "Alaska", "Puerto Rico")) %>%
+  st_union() %>% 
+  st_transform(5070)
+```
+
+
+# Play with both st_simplify and ms_simplify & find the dTolorance and the keep parameters you feel maintain a desired shape and topology
+```{r}
+stconus100 = CONUS_state_borders %>% 
+  st_simplify(dTolerance = 100)
+
+stconus1000 = CONUS_state_borders %>% 
+  st_simplify(dTolerance = 1000)
+
+stconus5500 = CONUS_state_borders %>% 
+  st_simplify(dTolerance = 5500)
+
+stconus10000 = CONUS_state_borders %>% 
+  st_simplify(dTolerance = 10000)
+
+msconus5 = CONUS_state_borders %>% 
+  ms_simplify(keep = .05)
+
+msconus10 = CONUS_state_borders %>% 
+  ms_simplify(keep = .1)
+
+msconus40 = CONUS_state_borders %>% 
+  ms_simplify(keep = .40)
+
+msconus80 = CONUS_state_borders %>% 
+  ms_simplify(keep = .80)
+
+
+#I personally liked using st_simplify more than ms_simplify since this one was easier to undertsand to me & that I like how dTolorance sets the perameter to allow st_simpligy to work and is the distance of points needed to make a map.
+
+```
+
+
+# Find the number of points in the raw data and in your simplifications using mapview::npts / In your Rmd, create a map for the raw, and each simplified geometry and report the number of points in each
+# Plots
+```{r}
+plot(CONUS_state_borders)
+plot(stconus5500)
+plot(stconus10000)
+mapview::npts(CONUS_state_borders)
+mapview::npts(stconus5500)
+mapview::npts(stconus10000)
+
+```
+
+```{r}
+plot(CONUS_state_borders)
+plot(msconus10)
+plot(msconus80)
+mapview::npts(CONUS_state_borders)
+mapview::npts(msconus10)
+mapview::npts(msconus80)
+```
+
+
+
+
+
+```{r}
+ggplot() + 
+  geom_sf(data = CONUS_state_borders) + 
+  labs(title = "Full CONUS Map",
+       caption = paste("Number of points used = ", mapview::npts(CONUS_state_borders)))
+```
+
+```{r}
+ggplot() + 
+  geom_sf(data = stconus10000) + 
+  labs(title = "st_simplify() CONUS Map: dTolerance = 10,000",
+       caption = paste("Number of points used = ", mapview::npts(stconus10000)))
+```
+
+```{r}
+ggplot() + 
+  geom_sf(data = msconus10) + 
+  labs(title = "ms_simplify() CONUS Map: keep = .1",
+       caption = paste("Number of points used = ", mapview::npts(msconus10)))
+```
+

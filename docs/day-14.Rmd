@@ -1,0 +1,89 @@
+---
+title: "Geography 176A"
+author: "[Nate Edgar](https://github.com/Nateedgar97)"
+subtitle: 'Daily Exercise 14: Creating a Function'
+output:
+  html_document:
+    theme: journal
+---
+
+# Libraries
+```{r}
+library(tidyverse)
+library(sf)
+library(USAboundaries)
+```
+
+# First Function
+
+```{r}
+get_conus = function(data, var){
+  filter(data, !get(var) %in% 
+           c("Hawaii", "Puerto Rico", "Alaska",
+             "Guam", "District of Columbia")) %>% 
+  st_transform(5070)}
+```
+
+# Reading in Data
+```{r, message = FALSE}
+cities = read_csv("../data/uscities.csv") %>% 
+  st_as_sf(coords = c("lng", "lat"), crs = 4326) %>% 
+  st_transform(5070)
+
+conus_counties = get_conus(us_counties(), "state_name")
+
+conus_states = get_conus(us_states(), "state_name")
+```
+
+
+# The pip() function
+
+```{r}
+point_in_polygon = function(points, polygon, nam){
+  st_join(polygon, points) %>% 
+  st_drop_geometry() %>% 
+  count(get(nam)) %>% 
+  setNames(c(nam, "n")) %>% 
+  left_join(polygon, by = nam) %>% 
+  st_as_sf()
+}
+```
+
+# Using pip()
+
+```{r}
+OGCounts = point_in_polygon(cities, filter(conus_states, state_name == "Oregon"), "geoid")
+VMCounts = point_in_polygon(cities, filter(conus_states, state_name == "Vermont"), "geoid")
+NYCounts = point_in_polygon(cities, filter(conus_states, state_name == "New York"), "geoid")
+CACounts = point_in_polygon(cities, filter(conus_states, state_name == "California"), "geoid")
+WACounts = point_in_polygon(cities, filter(conus_states, state_name == "Washington"), "geoid")
+COCounts = point_in_polygon(cities, filter(conus_states, state_name == "Colorado"), "geoid")
+```
+
+
+# The plot_pip() Function
+```{r}
+plot_pip = function(data){
+  ggplot() + 
+    geom_sf(data = data, aes(fill = log(n)), alpha = .9, size = .2) + 
+    scale_fill_gradient(low = "white", high = "darkgreen") + 
+    theme_map() + 
+    theme(legend.position = 'none',
+          plot.title = element_text(face = "bold", color = "darkblue", hjust = .5, size = 24)) +
+    labs(title = paste0("Number of Cities in ", data$state_name),
+         caption = paste0(sum(data$n), " cities")) 
+}
+```
+
+# Using plot_pip()
+
+```{r}
+plot_pip(OGCounts)
+plot_pip(VMCounts)
+plot_pip(NYCounts)
+plot_pip(CACounts)
+plot_pip(WACounts)
+ggsave(filename = "WACounts.png", path = "../img")
+plot_pip(COCounts)
+```
+
